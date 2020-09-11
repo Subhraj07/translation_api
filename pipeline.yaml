@@ -1,0 +1,35 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Workflow
+metadata:
+  generateName: execution-order-pipeline-
+  annotations: {pipelines.kubeflow.org/kfp_sdk_version: 1.0.0, pipelines.kubeflow.org/pipeline_compilation_time: '2020-09-11T08:52:14.436994',
+    pipelines.kubeflow.org/pipeline_spec: '{"description": "A pipeline with two sequential
+      steps.", "name": "Execution order pipeline"}'}
+  labels: {pipelines.kubeflow.org/kfp_sdk_version: 1.0.0}
+spec:
+  entrypoint: execution-order-pipeline
+  templates:
+  - name: execution-order-pipeline
+    dag:
+      tasks:
+      - {name: incident-model-building, template: incident-model-building}
+      - name: incident-model-building-2
+        template: incident-model-building-2
+        dependencies: [incident-model-building]
+  - name: incident-model-building
+    container:
+      command:
+      - python
+      - -c
+      - "\nimport pandas as pd\nprint(pd)\nprint(pd.value_counts)\n        "
+      image: subhraj07/incident-prediction:v1
+  - name: incident-model-building-2
+    container:
+      command:
+      - python
+      - -c
+      - "\nimport boto3\nprint(boto3)\n        "
+      image: subhraj07/incident-prediction:v1
+  arguments:
+    parameters: []
+  serviceAccountName: pipeline-runner
